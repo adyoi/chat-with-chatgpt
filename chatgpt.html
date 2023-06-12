@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <style>
+    html, body {
+      height: 100%;
+      background-image: url('https://wallpaperaccess.com/full/1288099.jpg'); /* Ganti dengan URL gambar latar belakang abstrak yang Anda inginkan */
+      background-size: 30%;
+      background-repeat: repeat;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .chat-container {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      background-image: url('https://wallpaperaccess.com/full/1288117.png'); /* Ganti dengan URL gambar latar belakang abstrak yang Anda inginkan */
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+
+    .chat-header {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      border-radius: 5px 5px 0 0;
+    }
+
+    .chat-messages {
+      padding: 10px;
+      height: 350px;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .message-sender {
+      background-color: #007bff;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 10px;
+      margin: 5px 0;
+      align-self: flex-end;
+    }
+
+    .message-recipient {
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      padding: 5px 10px;
+      margin: 5px 0;
+      align-self: flex-start;
+    }
+
+    .message-error {
+      background-color: #dc3545;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 10px;
+      margin: 5px 0;
+    }
+
+    .chat-input {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+      border-radius: 0 0 5px 5px;
+    }
+
+    .chat-input input {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+
+  </style>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="chat-container">
+      <div class="chat-header">
+        <h3>ChatGPT</h3>
+      </div>
+      <div class="chat-messages"></div>
+      <div class="chat-input">
+        <input type="text" class="form-control" id="message-input" placeholder="Type your message...">
+        <button class="btn btn-primary" id="send-button">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <div data-no-jquery="yes"></div>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('#message-input').focus();
+      // Fungsi untuk menampilkan pesan
+      function displayMessage(sender, text) {
+        var messageContainer = $('<div class="message"></div>');
+        var textElement = $('<p class="text"></p>').text(text);
+
+        if (sender === 'You') {
+          messageContainer.addClass('message-sender');
+        } else {
+          messageContainer.addClass('message-recipient');
+        }
+
+        messageContainer.append(textElement);
+        $('.chat-messages').append(messageContainer);
+
+        var chatContainer = $(".chat-messages");
+        chatContainer.scrollTop(chatContainer.prop('scrollHeight'));
+      }
+
+      // Fungsi untuk menampilkan pesan error
+      function displayError(error) {
+        var errorMessage = error.responseJSON ? error.responseJSON.error.message : 'An error occurred.';
+        var errorCode = error.responseJSON ? error.responseJSON.error.code : 'Unknown error';
+        var errorContainer = $('<div class="message message-error"></div>');
+        var errorText = $('<p class="text"></p>').text('Error ' + errorCode + ': ' + errorMessage);
+
+        errorContainer.append(errorText);
+        $('.chat-messages').append(errorContainer);
+
+        var chatContainer = $(".chat-messages");
+        chatContainer.scrollTop(chatContainer.prop('scrollHeight'));
+      }
+
+      // Fungsi untuk mengirim pesan
+      function sendMessage() {
+        var messageInput = $('#message-input');
+        var message = messageInput.val().trim();
+
+        if (message === '') {
+          return;
+        }
+
+        displayMessage('You', message);
+        messageInput.val('');
+
+        // Mengirim permintaan ke API ChatGPT
+        $.ajax({
+          url: 'https://api.openai.com/v1/chat/completions',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer YOUR_API_KEY' // YOUR_API_KEY Ganti dengan kunci API ChatGPT Anda
+          },
+          method: 'POST',
+          data: JSON.stringify({
+            'model': 'YOUR_MODEL', // YOUR_MODEL Ganti dengan model yang ingin Anda gunakan (text-davinci-002, text-davinci-003)
+            'messages': [{'role': 'system', 'content': 'You are a helpful assistant.'}, {'role': 'user', 'content': message}]
+          }),
+          success: function(response) {
+            var reply = response.choices[0].message.content;
+            displayMessage('AI', reply);
+          },
+          error: function(error) {
+            displayError(error);
+          }
+        });
+      }
+
+      // Mengatur event click pada tombol Kirim
+      $('#send-button').click(function() {
+        sendMessage();
+      });
+
+      // Mengatur event keypress pada input pesan
+      $('#message-input').keypress(function(e) {
+        if (e.which == 13) {
+          sendMessage();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
